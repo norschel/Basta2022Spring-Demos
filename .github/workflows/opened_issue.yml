@@ -1,0 +1,54 @@
+# This is a basic workflow that is manually triggered
+
+name: Issue Created
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  issues:
+    types: [opened]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "greet"
+  greet:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Runs a single command using the runners shell
+    - name: Send greeting
+      run: echo "Hello ${{ github.event.inputs.name }}"
+      
+    - name: Chuck Norris quote
+      # You may pin to the exact commit or the version.
+      # uses: glav/chuck-norris-quote@ab2f5ed65aa44b84d8a63ac593e838f3d7472836
+      uses: glav/chuck-norris-quote@v1.0
+      id: textchuck
+      with:
+        quote-format: html/text
+
+    - name: Add reactions
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+          reactions: heart, hooray, laugh
+          body: ${{ steps.textchuck.outputs.quote }}
+          issue-number: ${{ github.event.issue.number }}
+          
+    - name: AutoLabeller
+      uses: actions/github-script@v4
+      with:
+          script: |
+            github.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['Postponed']
+            })
+    - name: Close Issue
+      # You may pin to the exact commit or the version.
+      # uses: peter-evans/close-issue@a700eac5bf2a1c7a8cb6da0c13f93ed96fd53dbe
+      uses: peter-evans/close-issue@v1.0.3
+      with:
+        comment: '👋 Thanks for reporting! ... but unfortunately we do not have time for you at the moment. Don''t give up and just try again later.'
